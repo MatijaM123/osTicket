@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: osticket-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: osticket
+      MYSQL_USER: osticketusr
+      MYSQL_PASSWORD: osticketpass
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  osticket:
+    image: tiredofit/osticket
+    container_name: osticket-app
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: mysql
+      DB_NAME: osticket
+      DB_USER: osticketusr
+      DB_PASS: osticketpass
+      TIMEZONE: Europe/Belgrade
+      ADMIN_FIRSTNAME: Admin
+      ADMIN_LASTNAME: User
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_USER: osticketusr
+      ADMIN_PASS: admin123
+      INSTALL_SECRET: my-super-secret-key
+    volumes:
+      - osticket_data:/www/osticket
+
+volumes:
+  mysql_data:
+  osticket_data:
